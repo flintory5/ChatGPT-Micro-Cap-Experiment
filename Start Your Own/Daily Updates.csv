@@ -1,1 +1,4 @@
-Date,Ticker,Shares,Cost Basis,Stop Loss,Current Price,Total Value,PnL,Action,Cash Balance,Total Equity,Buy Price
+Date,Ticker,Shares,Buy Price,Cost Basis,Stop Loss,Current Price,Total Value,PnL,Action,Cash Balance,Total Equity
+2025-10-30,MIST,184,1.865,343.16,0.0,1.84,338.56,-4.6,HOLD,,
+2025-10-30,ATRA,22,14.57,320.54,0.0,14.06,309.32,-11.22,HOLD,,
+2025-10-30,TOTAL,,,,,,647.88,-15.82,,38.3,686.18
