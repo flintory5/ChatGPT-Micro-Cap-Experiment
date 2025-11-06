@@ -640,7 +640,19 @@ Would you like to log a manual trade? Enter 'b' for buy, 's' for sell, "u" to up
                     if sell_order_type == 'l':
                         sell_price = float(input("Enter sell LIMIT price: "))
                     elif sell_order_type == 'm':
-                        sell_price = o
+                        price_input = input("Enter sell price (or press Enter to fetch current market price): ").strip()
+                        if price_input:
+                            sell_price = float(price_input)
+                        else:
+                            s, e = trading_day_window()
+                            fetch = download_price_data(ticker, start=s, end=e, auto_adjust=False, progress=False)
+                            data = fetch.df
+                            if data.empty:
+                                print(f"MOO sell for {ticker} failed: no market data available (source={fetch.source}).")
+                                continue
+                            o = float(data["Open"].iloc[-1]) if "Open" in data else float(data["Close"].iloc[-1])
+                            sell_price = round(o, 2)
+                            print(f"Fetched market price: ${sell_price:.2f}")
                     else:
                         print("Unknown order type. Use 'm' or 'l'.")
                         continue
