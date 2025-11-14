@@ -1083,6 +1083,8 @@ def daily_results(chatgpt_portfolio: pd.DataFrame, cash: float) -> None:
 
     # Daily simple returns (portfolio)
     r = equity_series.pct_change().dropna()
+    # Filter out any remaining NaN or infinite values
+    r = r[np.isfinite(r)]
     n_days = len(r)
     if n_days < 2:
         print("\n" + "=" * 64)
@@ -1163,14 +1165,20 @@ def daily_results(chatgpt_portfolio: pd.DataFrame, cash: float) -> None:
             x = np.asarray(rm.values, dtype=float).ravel()
             y = np.asarray(rp.values, dtype=float).ravel()
 
-            n_obs = x.size
-            rm_std = float(np.std(x, ddof=1)) if n_obs > 1 else 0.0
-            if rm_std > 0:
-                beta, alpha_daily = np.polyfit(x, y, 1)
-                alpha_annual = (1 + float(alpha_daily)) ** 252 - 1
+            # Filter out NaN and infinite values from both arrays, keeping only valid pairs
+            mask = np.isfinite(x) & np.isfinite(y)
+            x = x[mask]
+            y = y[mask]
 
-                corr = np.corrcoef(x, y)[0, 1]
-                r2 = float(corr ** 2)
+            n_obs = x.size
+            if n_obs >= 2:
+                rm_std = float(np.std(x, ddof=1)) if n_obs > 1 else 0.0
+                if rm_std > 0:
+                    beta, alpha_daily = np.polyfit(x, y, 1)
+                    alpha_annual = (1 + float(alpha_daily)) ** 252 - 1
+
+                    corr = np.corrcoef(x, y)[0, 1]
+                    r2 = float(corr ** 2)
 
     # $X normalized S&P 500 over same window (asks user for initial equity)
     spx_norm_fetch = download_price_data(
