@@ -1175,7 +1175,22 @@ def daily_results(chatgpt_portfolio: pd.DataFrame, cash: float) -> None:
                 rm_std = float(np.std(x, ddof=1)) if n_obs > 1 else 0.0
                 if rm_std > 0:
                     beta, alpha_daily = np.polyfit(x, y, 1)
-                    alpha_annual = (1 + float(alpha_daily)) ** 252 - 1
+                    # Guard against overflow for alpha_daily, which can be very large if only a few observations are present.
+                    # If (1 + alpha_daily) is too large, the exponentiation will result in OverflowError.
+                    # Maximum safe value: (1 + alpha_daily) ** 252 must be <= ~1.8e308
+                    # This gives us approximately alpha_daily <= 15.6, but we use a more conservative threshold.
+                    # Also check for values too close to -1 which would cause issues.
+                    if not np.isfinite(alpha_daily) or alpha_daily > 10 or alpha_daily <= -0.99:
+                        alpha_annual = np.nan
+                    else:
+                        try:
+                            base = 1 + float(alpha_daily)
+                            alpha_annual = base ** 252 - 1
+                            # Check if result is finite (could be inf or nan)
+                            if not np.isfinite(alpha_annual):
+                                alpha_annual = np.nan
+                        except (OverflowError, ValueError):
+                            alpha_annual = np.nan
 
                     corr = np.corrcoef(x, y)[0, 1]
                     r2 = float(corr ** 2)
